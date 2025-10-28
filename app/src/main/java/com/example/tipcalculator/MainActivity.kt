@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tipcalculator.ui.theme.TipCalculatorTheme
+import java.text.NumberFormat // NEW import
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +39,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Call our main screen composable
                     TipCalculatorScreen()
                 }
             }
@@ -46,23 +46,35 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Main screen composable
 @Composable
 fun TipCalculatorScreen() {
-    // --- STATE ---
-    // We use 'remember' and 'mutableStateOf' to hold the text
-    // the user types into the text fields.
     var billAmountInput by remember { mutableStateOf("") }
     var tipPercentInput by remember { mutableStateOf("") }
-    // --- END OF STATE ---
 
-    // A Column arranges its children vertically
+    // --- NEW: CALCULATION LOGIC ---
+
+    // Convert text inputs to numbers.
+    // 'toDoubleOrNull()' is a safe way to convert. It returns 'null' if the text isn't a valid number.
+    // The '?: 0.0' (Elvis operator) means "if the result is null, use 0.0 instead".
+    val billAmount = billAmountInput.toDoubleOrNull() ?: 0.0
+    val tipPercent = tipPercentInput.toDoubleOrNull() ?: 0.0
+
+    // Calculate the tip and total
+    val tip = (billAmount * tipPercent) / 100
+    val total = billAmount + tip
+
+    // Format the numbers as currency
+    val tipFormatted = formatAsCurrency(tip)
+    val totalFormatted = formatAsCurrency(total)
+
+    // --- END OF NEW LOGIC ---
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp), // Add generous padding around the screen
-        verticalArrangement = Arrangement.Center, // Center everything vertically
-        horizontalAlignment = Alignment.CenterHorizontally // Center everything horizontally
+            .padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Text(
@@ -71,22 +83,21 @@ fun TipCalculatorScreen() {
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(32.dp)) // A large space
-
-        // --- INPUT FIELDS ---
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Text field for the bill amount
         OutlinedTextField(
             value = billAmountInput,
+            // When the value changes, we update our state.
+            // This triggers a "recomposition", and all the logic above runs again.
             onValueChange = { billAmountInput = it },
             label = { Text("Bill Amount") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true, // Ensures the input is a single line
-            // Tell the keyboard to show numbers only
+            singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        Spacer(modifier = Modifier.height(16.dp)) // A smaller space
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Text field for the tip percentage
         OutlinedTextField(
@@ -95,31 +106,40 @@ fun TipCalculatorScreen() {
             label = { Text("Tip %") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            // Tell the keyboard to show numbers only
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        Spacer(modifier = Modifier.height(32.dp)) // A large space
+        Spacer(modifier = Modifier.height(32.dp))
 
-        // --- RESULTS ---
-        // We will display the results here. For now, they are hardcoded.
+        // --- UPDATED RESULTS ---
+        // Display the new formatted values
 
         Text(
-            text = "Tip: $0.00",
+            text = "Tip: $tipFormatted", // UPDATED
             fontSize = 24.sp
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Total: $0.00",
+            text = "Total: $totalFormatted", // UPDATED
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
-// This is the preview for our TipCalculatorScreen
+// --- HELPER FUNCTION ---
+/**
+ * Formats a Double as a currency string
+ */
+private fun formatAsCurrency(amount: Double): String {
+    // This uses the device's default locale to format currency.
+    // In the US, it's "$", in Europe it might be "€", etc.
+    return NumberFormat.getCurrencyInstance().format(amount)
+}
+// --- END OF HELPER FUNCTION ---
+
 @Preview(showBackground = true)
 @Composable
 fun TipCalculatorScreenPreview() {
