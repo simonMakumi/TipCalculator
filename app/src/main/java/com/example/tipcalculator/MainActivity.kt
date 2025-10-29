@@ -17,9 +17,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -27,8 +24,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tipcalculator.ui.theme.TipCalculatorTheme
-import java.text.NumberFormat // NEW import
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,35 +36,27 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TipCalculatorScreen()
+                    // Get the ViewModel instance
+                    TipCalculatorScreen(viewModel = viewModel())
                 }
             }
         }
     }
 }
 
+// Our screen now receives the ViewModel
 @Composable
-fun TipCalculatorScreen() {
-    var billAmountInput by remember { mutableStateOf("") }
-    var tipPercentInput by remember { mutableStateOf("") }
+fun TipCalculatorScreen(viewModel: TipViewModel) {
 
-    // --- NEW: CALCULATION LOGIC ---
+    // --- STATE ---
+    // Read all state from the ViewModel
+    val billAmountInput by viewModel.billAmountInput
+    val tipPercentInput by viewModel.tipPercentInput
 
-    // Convert text inputs to numbers.
-    // 'toDoubleOrNull()' is a safe way to convert. It returns 'null' if the text isn't a valid number.
-    // The '?: 0.0' (Elvis operator) means "if the result is null, use 0.0 instead".
-    val billAmount = billAmountInput.toDoubleOrNull() ?: 0.0
-    val tipPercent = tipPercentInput.toDoubleOrNull() ?: 0.0
+    val tipFormatted = viewModel.tipFormatted
+    val totalFormatted = viewModel.totalFormatted
+    // --- END OF STATE ---
 
-    // Calculate the tip and total
-    val tip = (billAmount * tipPercent) / 100
-    val total = billAmount + tip
-
-    // Format the numbers as currency
-    val tipFormatted = formatAsCurrency(tip)
-    val totalFormatted = formatAsCurrency(total)
-
-    // --- END OF NEW LOGIC ---
 
     Column(
         modifier = Modifier
@@ -88,13 +77,13 @@ fun TipCalculatorScreen() {
         // Text field for the bill amount
         OutlinedTextField(
             value = billAmountInput,
-            // When the value changes, we update our state.
-            // This triggers a "recomposition", and all the logic above runs again.
-            onValueChange = { billAmountInput = it },
+            onValueChange = { viewModel.onBillAmountChange(it) }, // Call ViewModel
             label = { Text("Bill Amount") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            // --- NEW ICON ---
+            leadingIcon = { Text("$") }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -102,48 +91,39 @@ fun TipCalculatorScreen() {
         // Text field for the tip percentage
         OutlinedTextField(
             value = tipPercentInput,
-            onValueChange = { tipPercentInput = it },
-            label = { Text("Tip %") },
+            onValueChange = { viewModel.onTipPercentChange(it) }, // Call ViewModel
+            label = { Text("Tip") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            // --- NEW SUFFIX ---
+            suffix = { Text("%") }
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // --- UPDATED RESULTS ---
-        // Display the new formatted values
-
+        // --- RESULTS ---
         Text(
-            text = "Tip: $tipFormatted", // UPDATED
+            text = "Tip: $tipFormatted",
             fontSize = 24.sp
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Total: $totalFormatted", // UPDATED
+            text = "Total: $totalFormatted",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
-// --- HELPER FUNCTION ---
-/**
- * Formats a Double as a currency string
- */
-private fun formatAsCurrency(amount: Double): String {
-    // This uses the device's default locale to format currency.
-    // In the US, it's "$", in Europe it might be "€", etc.
-    return NumberFormat.getCurrencyInstance().format(amount)
-}
-// --- END OF HELPER FUNCTION ---
 
 @Preview(showBackground = true)
 @Composable
 fun TipCalculatorScreenPreview() {
     TipCalculatorTheme {
-        TipCalculatorScreen()
+
+        Text("Tip Calculator Screen")
     }
 }
