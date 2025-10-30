@@ -1,6 +1,7 @@
 package com.example.tipcalculator
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -12,37 +13,30 @@ class TipViewModel : ViewModel() {
     private val _billAmountInput = mutableStateOf("")
     val billAmountInput: State<String> = _billAmountInput
 
+    // --- 1. REVERTED: Back to a String for the text field ---
     private val _tipPercentInput = mutableStateOf("")
     val tipPercentInput: State<String> = _tipPercentInput
+    // --- END OF REVERT ---
 
-    // --- NEW STATE for Splitting ---
-    private val _numberOfPeople = mutableIntStateOf(1) // Start with 1 person
+    private val _numberOfPeople = mutableIntStateOf(1)
     val numberOfPeople: State<Int> = _numberOfPeople
-    // --- END OF NEW STATE ---
 
-    private val _tip = mutableStateOf(0.0)
-    private val _total = mutableStateOf(0.0)
-
-    // --- NEW STATE for Per Person ---
-    private val _totalPerPerson = mutableStateOf(0.0)
-    // --- END OF NEW STATE ---
-
+    // --- 2. KEPT: Using mutableDoubleStateOf ---
+    private val _tip = mutableDoubleStateOf(0.0)
+    private val _total = mutableDoubleStateOf(0.0)
+    private val _totalPerPerson = mutableDoubleStateOf(0.0)
+    // --- END OF FIX ---
 
     // --- UI-Formatted State ---
     val tipFormatted: String
-        get() = formatAsCurrency(_tip.value)
+        get() = formatAsCurrency(_tip.doubleValue)
 
     val totalFormatted: String
-        get() = formatAsCurrency(_total.value)
+        get() = formatAsCurrency(_total.doubleValue)
 
-    // --- NEW UI-Formatted State ---
     val totalPerPersonFormatted: String
-        get() = formatAsCurrency(_totalPerPerson.value)
-    // --- END OF NEW STATE ---
+        get() = formatAsCurrency(_totalPerPerson.doubleValue)
 
-
-    // --- INIT ---
-    // Calculate initial values when ViewModel is created
     init {
         calculateTip()
     }
@@ -54,43 +48,39 @@ class TipViewModel : ViewModel() {
         calculateTip()
     }
 
+    // --- 1. REVERTED: Back to taking a String ---
     fun onTipPercentChange(newText: String) {
         _tipPercentInput.value = newText
         calculateTip()
     }
+    // --- END OF REVERT ---
 
-    // --- NEW EVENTS for Splitting ---
     fun increasePeople() {
-        _numberOfPeople.intValue++ // Increase count by 1
-        calculateTip() // Recalculate
+        _numberOfPeople.intValue++
+        calculateTip()
     }
 
     fun decreasePeople() {
-        if (_numberOfPeople.intValue > 1) { // Validation: Can't go below 1
-            _numberOfPeople.intValue-- // Decrease count by 1
-            calculateTip() // Recalculate
+        if (_numberOfPeople.intValue > 1) {
+            _numberOfPeople.intValue--
+            calculateTip()
         }
     }
-    // --- END OF NEW EVENTS ---
-
 
     // --- PRIVATE LOGIC ---
-
     private fun calculateTip() {
         val billAmountText = _billAmountInput.value
+        // 1. REVERTED: Read the text from the state
         val tipPercentText = _tipPercentInput.value
 
         val billAmount = billAmountText.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+        // 1. REVERTED: Convert the text to a number
         val tipPercent = tipPercentText.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
 
-        // Calculate tip and total
-        _tip.value = (billAmount * tipPercent) / 100
-        _total.value = billAmount + _tip.value
-
-        // --- NEW CALCULATION ---
-        // Calculate total per person
-        _totalPerPerson.value = _total.value / _numberOfPeople.intValue
-        // --- END OF NEW CALCULATION ---
+        // 2. KEPT: Assign with .doubleValue
+        _tip.doubleValue = (billAmount * tipPercent) / 100
+        _total.doubleValue = billAmount + _tip.doubleValue
+        _totalPerPerson.doubleValue = _total.doubleValue / _numberOfPeople.intValue
     }
 
     private fun formatAsCurrency(amount: Double): String {

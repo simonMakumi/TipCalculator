@@ -54,7 +54,7 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
 
     // --- STATE ---
     val billAmountInput by viewModel.billAmountInput
-    val tipPercentInput by viewModel.tipPercentInput
+    val tipPercentInput by viewModel.tipPercentInput // REVERTED
     val numberOfPeople by viewModel.numberOfPeople
 
     val tipFormatted = viewModel.tipFormatted
@@ -92,7 +92,7 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tip Percent
+        // --- REVERTED TO TEXT FIELD ---
         OutlinedTextField(
             value = tipPercentInput,
             onValueChange = { viewModel.onTipPercentChange(it) },
@@ -102,10 +102,11 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             suffix = { Text("%") }
         )
+        // --- END OF REVERT ---
 
-        Spacer(modifier = Modifier.height(16.dp)) // Smaller spacer
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // --- NEW "SPLIT BY" ROW ---
+        // "Split by" Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -119,7 +120,6 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Decrease Button
                 IconButton(onClick = { viewModel.decreasePeople() }) {
                     Icon(imageVector = Icons.Default.Remove, contentDescription = "Decrease people")
                 }
@@ -131,13 +131,11 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
 
-                // Increase Button
                 IconButton(onClick = { viewModel.increasePeople() }) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Increase people")
                 }
             }
         }
-        // --- END OF NEW ROW ---
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -155,16 +153,14 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(16.dp)) // NEW
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // --- NEW "PER PERSON" TEXT ---
         Text(
             text = "Per Person: $totalPerPersonFormatted",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary // Make it stand out
+            color = MaterialTheme.colorScheme.primary
         )
-        // --- END OF NEW TEXT ---
     }
 }
 
