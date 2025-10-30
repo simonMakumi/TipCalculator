@@ -5,12 +5,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -36,7 +42,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Get the ViewModel instance
                     TipCalculatorScreen(viewModel = viewModel())
                 }
             }
@@ -44,17 +49,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Our screen now receives the ViewModel
 @Composable
 fun TipCalculatorScreen(viewModel: TipViewModel) {
 
     // --- STATE ---
-    // Read all state from the ViewModel
     val billAmountInput by viewModel.billAmountInput
     val tipPercentInput by viewModel.tipPercentInput
+    val numberOfPeople by viewModel.numberOfPeople
 
     val tipFormatted = viewModel.tipFormatted
     val totalFormatted = viewModel.totalFormatted
+    val totalPerPersonFormatted = viewModel.totalPerPersonFormatted
     // --- END OF STATE ---
 
 
@@ -74,31 +79,65 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Text field for the bill amount
+        // Bill Amount
         OutlinedTextField(
             value = billAmountInput,
-            onValueChange = { viewModel.onBillAmountChange(it) }, // Call ViewModel
+            onValueChange = { viewModel.onBillAmountChange(it) },
             label = { Text("Bill Amount") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            // --- NEW ICON ---
             leadingIcon = { Text("$") }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Text field for the tip percentage
+        // Tip Percent
         OutlinedTextField(
             value = tipPercentInput,
-            onValueChange = { viewModel.onTipPercentChange(it) }, // Call ViewModel
+            onValueChange = { viewModel.onTipPercentChange(it) },
             label = { Text("Tip") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            // --- NEW SUFFIX ---
             suffix = { Text("%") }
         )
+
+        Spacer(modifier = Modifier.height(16.dp)) // Smaller spacer
+
+        // --- NEW "SPLIT BY" ROW ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Split by",
+                fontSize = 20.sp
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Decrease Button
+                IconButton(onClick = { viewModel.decreasePeople() }) {
+                    Icon(imageVector = Icons.Default.Remove, contentDescription = "Decrease people")
+                }
+
+                Text(
+                    text = "$numberOfPeople",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                // Increase Button
+                IconButton(onClick = { viewModel.increasePeople() }) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Increase people")
+                }
+            }
+        }
+        // --- END OF NEW ROW ---
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -115,6 +154,17 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
+
+        Spacer(modifier = Modifier.height(16.dp)) // NEW
+
+        // --- NEW "PER PERSON" TEXT ---
+        Text(
+            text = "Per Person: $totalPerPersonFormatted",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary // Make it stand out
+        )
+        // --- END OF NEW TEXT ---
     }
 }
 
@@ -123,7 +173,6 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
 @Composable
 fun TipCalculatorScreenPreview() {
     TipCalculatorTheme {
-
         Text("Tip Calculator Screen")
     }
 }

@@ -59,4 +59,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+    // For extended icons like Add and Remove
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
 }
