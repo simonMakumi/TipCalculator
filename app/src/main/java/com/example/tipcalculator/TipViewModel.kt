@@ -1,4 +1,4 @@
-package com.example.tipcalculator
+package com.example.tipcalculator // Make sure this matches your package name!
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import java.text.NumberFormat
+import kotlin.math.ceil // NEW import
 
 class TipViewModel : ViewModel() {
 
@@ -13,19 +14,20 @@ class TipViewModel : ViewModel() {
     private val _billAmountInput = mutableStateOf("")
     val billAmountInput: State<String> = _billAmountInput
 
-    // --- 1. REVERTED: Back to a String for the text field ---
     private val _tipPercentInput = mutableStateOf("")
     val tipPercentInput: State<String> = _tipPercentInput
-    // --- END OF REVERT ---
 
     private val _numberOfPeople = mutableIntStateOf(1)
     val numberOfPeople: State<Int> = _numberOfPeople
 
-    // --- 2. KEPT: Using mutableDoubleStateOf ---
+    // --- NEW "ROUND UP" STATE ---
+    private val _roundUp = mutableStateOf(false)
+    val roundUp: State<Boolean> = _roundUp
+    // --- END OF NEW STATE ---
+
     private val _tip = mutableDoubleStateOf(0.0)
     private val _total = mutableDoubleStateOf(0.0)
     private val _totalPerPerson = mutableDoubleStateOf(0.0)
-    // --- END OF FIX ---
 
     // --- UI-Formatted State ---
     val tipFormatted: String
@@ -48,12 +50,10 @@ class TipViewModel : ViewModel() {
         calculateTip()
     }
 
-    // --- 1. REVERTED: Back to taking a String ---
     fun onTipPercentChange(newText: String) {
         _tipPercentInput.value = newText
         calculateTip()
     }
-    // --- END OF REVERT ---
 
     fun increasePeople() {
         _numberOfPeople.intValue++
@@ -67,20 +67,34 @@ class TipViewModel : ViewModel() {
         }
     }
 
+    // --- NEW "ROUND UP" EVENT ---
+    fun onRoundUpToggle(isToggled: Boolean) {
+        _roundUp.value = isToggled
+        calculateTip()
+    }
+    // --- END OF NEW EVENT ---
+
     // --- PRIVATE LOGIC ---
     private fun calculateTip() {
         val billAmountText = _billAmountInput.value
-        // 1. REVERTED: Read the text from the state
         val tipPercentText = _tipPercentInput.value
 
         val billAmount = billAmountText.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
-        // 1. REVERTED: Convert the text to a number
         val tipPercent = tipPercentText.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
 
-        // 2. KEPT: Assign with .doubleValue
-        _tip.doubleValue = (billAmount * tipPercent) / 100
-        _total.doubleValue = billAmount + _tip.doubleValue
-        _totalPerPerson.doubleValue = _total.doubleValue / _numberOfPeople.intValue
+        val tip = (billAmount * tipPercent) / 100
+        var total = billAmount + tip
+
+        // --- NEW ROUNDING LOGIC ---
+        if (_roundUp.value) {
+            // Use kotlin.math.ceil to round *up* to the next whole number
+            total = ceil(total)
+        }
+        // --- END OF NEW LOGIC ---
+
+        _tip.doubleValue = tip
+        _total.doubleValue = total
+        _totalPerPerson.doubleValue = total / _numberOfPeople.intValue
     }
 
     private fun formatAsCurrency(amount: Double): String {

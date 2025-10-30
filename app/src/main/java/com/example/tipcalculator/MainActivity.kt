@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,8 +55,9 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
 
     // --- STATE ---
     val billAmountInput by viewModel.billAmountInput
-    val tipPercentInput by viewModel.tipPercentInput // REVERTED
+    val tipPercentInput by viewModel.tipPercentInput
     val numberOfPeople by viewModel.numberOfPeople
+    val roundUp by viewModel.roundUp
 
     val tipFormatted = viewModel.tipFormatted
     val totalFormatted = viewModel.totalFormatted
@@ -92,7 +94,7 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- REVERTED TO TEXT FIELD ---
+        // Tip Percent
         OutlinedTextField(
             value = tipPercentInput,
             onValueChange = { viewModel.onTipPercentChange(it) },
@@ -102,7 +104,6 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             suffix = { Text("%") }
         )
-        // --- END OF REVERT ---
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -136,6 +137,26 @@ fun TipCalculatorScreen(viewModel: TipViewModel) {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- NEW "ROUND UP" ROW ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Round up total?",
+                fontSize = 20.sp
+            )
+
+            Switch(
+                checked = roundUp,
+                onCheckedChange = { viewModel.onRoundUpToggle(it) }
+            )
+        }
+        // --- END OF NEW ROW ---
 
         Spacer(modifier = Modifier.height(32.dp))
 
